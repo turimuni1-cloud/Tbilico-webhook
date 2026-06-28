@@ -2,12 +2,11 @@ from flask import Flask, request
 from twilio.twiml.voice_response import VoiceResponse
 from anthropic import Anthropic
 import os
+import sys
 
 app = Flask(__name__)
 
-# Используем переменную окружения ANTHROPIC_API_KEY для SDK
-# или CLAUDE_API_KEY если установлена
-API_KEY = os.environ.get('ANTHROPIC_API_KEY') or os.environ.get('CLAUDE_API_KEY')
+API_KEY = os.environ.get('CLAUDE_API_KEY')
 
 @app.route('/incoming-call', methods=['POST'])
 def incoming_call():
@@ -15,7 +14,9 @@ def incoming_call():
     from_number = request.form.get('From')
 
     try:
-        # Вызываем Claude API
+        if not API_KEY:
+            raise ValueError("CLAUDE_API_KEY environment variable not set")
+
         client = Anthropic(api_key=API_KEY)
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
@@ -28,7 +29,9 @@ def incoming_call():
 
         response_text = message.content[0].text
     except Exception as e:
-        print(f"Error: {str(e)}")
+        error_msg = str(e)
+        print(f"Error: {error_msg}", file=sys.stderr)
+        sys.stderr.flush()
         response_text = "Извините, произошла техническая ошибка. Попробуйте позже или свяжитесь с поддержкой."
 
     # Генерируем TwiML ответ
