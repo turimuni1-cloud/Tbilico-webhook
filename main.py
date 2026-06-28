@@ -1,11 +1,13 @@
 from flask import Flask, request
 from twilio.twiml.voice_response import VoiceResponse
-import anthropic
+from anthropic import Anthropic
 import os
 
 app = Flask(__name__)
 
-CLAUDE_API_KEY = os.environ.get('CLAUDE_API_KEY')
+# Используем переменную окружения ANTHROPIC_API_KEY для SDK
+# или CLAUDE_API_KEY если установлена
+API_KEY = os.environ.get('ANTHROPIC_API_KEY') or os.environ.get('CLAUDE_API_KEY')
 
 @app.route('/incoming-call', methods=['POST'])
 def incoming_call():
@@ -14,7 +16,7 @@ def incoming_call():
 
     try:
         # Вызываем Claude API
-        client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+        client = Anthropic(api_key=API_KEY)
         message = client.messages.create(
             model="claude-3-5-sonnet-20241022",
             max_tokens=1024,
